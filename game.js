@@ -148,7 +148,6 @@ function checkAutoComplete() {
 	if (state.stock.length > 0 || state.waste.length > 0) return false;
 
 	const autoCompleteButton = document.getElementById("autocomplete");
-	autoCompleteButton.style.background = "#1976d2";
 	autoCompleteButton.disabled = false;
 	return true;
 }
