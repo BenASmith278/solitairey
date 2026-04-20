@@ -1,0 +1,184 @@
+<head>
+	<title>Solitairey</title>
+	<script src="game.js" defer></script>
+	<style>
+		body {
+			box-sizing: border-box;
+			user-select: none;
+			overflow: hidden;
+			background: #1a6b3c;
+		}
+
+		.board {
+			position: relative;
+			width: 100%;
+			touch-action: none;
+		}
+
+		.hud {
+			display: flex;
+			color: #fff;
+			background: rgba(0, 0, 0, 0.5);
+			align-items: center;
+			justify-content: space-between;
+			padding: 5px 10px;
+		}
+
+		.card {
+			position: absolute;
+			will-change: transform;
+			transition: transform 0.15s ease-out;
+			width: var(--card-w, 80px);
+			height: var(--card-h, 112px);
+			background: transparent;
+		}
+
+		.no-transition {
+			transition: none !important;
+			pointer-events: none;
+		}
+
+		.card-back {
+			position: relative;
+			background: repeating-linear-gradient(
+				45deg,
+				#1565c0 10px,
+				#1976d2 20px
+			);
+			width: 100%;
+			height: 100%;
+			border-radius: 6px;
+			border: 2px solid white;
+		}
+
+		.card-face {
+			position: relative;
+			font-family: system-ui;
+			width: 100%;
+			height: 100%;
+			background: white;
+			border-radius: 6px;
+			border: 2px solid black;
+			cursor: pointer;
+		}
+
+		.clubs,
+		.spades {
+			color: black;
+		}
+
+		.diamonds,
+		.hearts {
+			color: red;
+		}
+
+		.corner {
+			position: absolute;
+		}
+
+		.middle {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			font-size: 32px;
+		}
+
+		.bottom-right {
+			position: absolute;
+			bottom: 2px;
+			right: 2px;
+			transform: rotate(180deg);
+		}
+
+		.face-down .card-face {
+			display: none;
+		}
+		.face-down .card-back {
+			display: block;
+		}
+
+		.face-up .card-face {
+			display: block;
+		}
+		.face-up .card-back {
+			display: none;
+		}
+
+		.drop-target {
+			outline: 2px dashed gold;
+		}
+
+		.pile-slot {
+			position: absolute;
+			border-radius: 6px;
+			border-color: white;
+			border-style: dashed;
+			border-width: 2px;
+			width: var(--card-w, 10px);
+			height: var(--card-h, 14px);
+		}
+
+		#win-screen {
+			display: none;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			z-index: 100;
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.5);
+			color: white;
+			font-size: 48px;
+		}
+
+		button {
+			border: none;
+			border-radius: 4px;
+			background: #1976d2;
+			color: white;
+			cursor: pointer;
+		}
+
+		button:disabled {
+			background: gray;
+		}
+
+		#win-button {
+			font-size: 24px;
+		}
+	</style>
+</head>
+<body>
+	<div id="win-screen" hidden>
+		You win!
+		<button id="win-button" onclick="newGame()" type="button">
+			New Game
+		</button>
+	</div>
+	<header id="hud" class="hud">
+		<div id="info">
+			<span id="moves">Moves: 0</span>
+			<span id="time">Time: 00:00</span>
+		</div>
+		<div>
+			<button id="new-game" onclick="newGame()" type="button">
+				New Game
+			</button>
+			<button id="undo" onclick="undo()" type="button">Undo</button>
+			<button
+				id="autocomplete"
+				onclick="onClickAutoComplete()"
+				type="button"
+				disabled
+			>
+				Auto Complete
+			</button>
+		</div>
+	</header>
+	<div
+		id="board"
+		onpointerdown="onPointerDown(event)"
+		ondblclick="onDoubleClick(event)"
+	></div>
+</body>
