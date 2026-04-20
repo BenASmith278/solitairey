@@ -642,6 +642,8 @@ function newGame(saveState = null) {
 	console.log(state);
 	initCardElements();
 	layout();
+	if (!checkAutoComplete())
+		document.getElementById("autocomplete").disabled = true;
 	startTimer();
 }
 
