@@ -401,7 +401,6 @@ function saveSnapshot() {
 		won: state.won,
 	};
 	state.history.push(JSON.stringify(snapshot));
-	if (state.history.length > 20) state.history.shift();
 }
 
 function applyMove(fromPile, toPile, cards) {
