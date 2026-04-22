@@ -615,6 +615,18 @@ function startTimer() {
 	}, 1000);
 }
 
+function onClickNewGame() {
+	const gameStats = {
+		date: new Date().toISOString(),
+		moves: state.moves,
+		time: state.elapsed,
+		won: state.won,
+	};
+	Store.save("history", gameStats);
+
+	newGame();
+}
+
 function newGame(saveState = null) {
 	if (saveState) {
 		state = saveState;
