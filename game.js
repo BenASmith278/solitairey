@@ -131,7 +131,7 @@ function checkWin() {
 		state.foundations[2].length === state.foundations[3].length
 	) {
 		state.won = true;
-		Store.save("solitaireState", state);
+		Store.save("gameState", state);
 		winScreen = document.getElementById("win-screen");
 		winScreen.hidden = false;
 		winScreen.style.display = "flex";
@@ -388,7 +388,7 @@ function undo() {
 	reverseCardMap = {};
 	initCardElements();
 	layout();
-	Store.save("solitaireState", state);
+	Store.save("gameState", state);
 }
 
 function saveSnapshot() {
@@ -429,7 +429,7 @@ function applyMove(fromPile, toPile, cards) {
 
 function onClickAutoComplete() {
 	if (isAutoCompleting) return;
-	Store.save("solitaireState", state);
+	Store.save("gameState", state);
 	saveSnapshot();
 	autoComplete();
 }
@@ -504,7 +504,7 @@ function onStockClick(event) {
 
 	state.moves++;
 	layout();
-	Store.save("solitaireState", state);
+	Store.save("gameState", state);
 }
 
 function onPointerDown(event) {
@@ -561,7 +561,7 @@ function onPointerUp(e) {
 			dropTarget.pile,
 			draggingArray,
 		);
-		Store.save("solitaireState", state);
+		Store.save("gameState", state);
 	} else {
 		layout();
 	}
@@ -595,7 +595,7 @@ function onDoubleClick(event) {
 	if (foundationIndex > -1 && fromPile.indexOf(card) === fromPile.length - 1) {
 		saveSnapshot();
 		applyMove(fromPile, state.foundations[foundationIndex], [cardEl]);
-		Store.save("solitaireState", state);
+		Store.save("gameState", state);
 	}
 }
 
@@ -619,7 +619,7 @@ function newGame(saveState = null) {
 	if (saveState) {
 		state = saveState;
 	} else {
-		Store.clear("solitaireState");
+		Store.clear("gameState");
 		if (timerTimer) clearInterval(timerTimer);
 		state.elapsed = 0;
 		state.moves = 0;
@@ -631,7 +631,7 @@ function newGame(saveState = null) {
 		state.won = false;
 
 		deal(shuffle(buildDeck()));
-		Store.save("solitaireState", state);
+		Store.save("gameState", state);
 	}
 	const winScreen = document.getElementById("win-screen");
 	winScreen.hidden = true;
@@ -646,7 +646,7 @@ function newGame(saveState = null) {
 }
 
 window.addEventListener("load", () => {
-	const savedState = Store.load("solitaireState");
+	const savedState = Store.load("gameState");
 	newGame(savedState);
 });
 
