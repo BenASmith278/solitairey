@@ -1,27 +1,27 @@
 const board = document.getElementById("board");
 
 const Store = {
-	save: (state) => {
+	save: (key, state) => {
 		try {
-			localStorage.setItem("solitaireState", JSON.stringify(state));
+			localStorage.setItem(key, JSON.stringify(state));
 		} catch (e) {
 			console.error("Failed to save state:", e);
 		}
 	},
-	load: () => {
+	load: (key) => {
 		try {
-			const stateStr = localStorage.getItem("solitaireState");
+			const stateStr = localStorage.getItem(key);
 			return stateStr ? JSON.parse(stateStr) : null;
 		} catch (e) {
 			console.error("Failed to load state:", e);
 			return null;
 		}
 	},
-	clear: () => {
+	clear: (key) => {
 		try {
-			localStorage.removeItem("solitaireState");
+			localStorage.removeItem(key);
 		} catch (e) {
-			console.error("Failed to clear state:", e);
+			console.error(`Failed to clear state at ${key}:`, e);
 		}
 	},
 };
@@ -131,7 +131,7 @@ function checkWin() {
 		state.foundations[2].length === state.foundations[3].length
 	) {
 		state.won = true;
-		Store.save(state);
+		Store.save("solitaireState", state);
 		winScreen = document.getElementById("win-screen");
 		winScreen.hidden = false;
 		winScreen.style.display = "flex";
@@ -388,7 +388,7 @@ function undo() {
 	reverseCardMap = {};
 	initCardElements();
 	layout();
-	Store.save(state);
+	Store.save("solitaireState", state);
 }
 
 function saveSnapshot() {
@@ -429,7 +429,7 @@ function applyMove(fromPile, toPile, cards) {
 
 function onClickAutoComplete() {
 	if (isAutoCompleting) return;
-	Store.save(state);
+	Store.save("solitaireState", state);
 	saveSnapshot();
 	autoComplete();
 }
@@ -504,7 +504,7 @@ function onStockClick(event) {
 
 	state.moves++;
 	layout();
-	Store.save(state);
+	Store.save("solitaireState", state);
 }
 
 function onPointerDown(event) {
@@ -561,7 +561,7 @@ function onPointerUp(e) {
 			dropTarget.pile,
 			draggingArray,
 		);
-		Store.save(state);
+		Store.save("solitaireState", state);
 	} else {
 		layout();
 	}
@@ -595,7 +595,7 @@ function onDoubleClick(event) {
 	if (foundationIndex > -1 && fromPile.indexOf(card) === fromPile.length - 1) {
 		saveSnapshot();
 		applyMove(fromPile, state.foundations[foundationIndex], [cardEl]);
-		Store.save(state);
+		Store.save("solitaireState", state);
 	}
 }
 
@@ -619,7 +619,7 @@ function newGame(saveState = null) {
 	if (saveState) {
 		state = saveState;
 	} else {
-		Store.clear();
+		Store.clear("solitaireState");
 		if (timerTimer) clearInterval(timerTimer);
 		state.elapsed = 0;
 		state.moves = 0;
@@ -631,7 +631,7 @@ function newGame(saveState = null) {
 		state.won = false;
 
 		deal(shuffle(buildDeck()));
-		Store.save(state);
+		Store.save("solitaireState", state);
 	}
 	const winScreen = document.getElementById("win-screen");
 	winScreen.hidden = true;
@@ -646,7 +646,7 @@ function newGame(saveState = null) {
 }
 
 window.addEventListener("load", () => {
-	const savedState = Store.load();
+	const savedState = Store.load("solitaireState");
 	newGame(savedState);
 });
 
