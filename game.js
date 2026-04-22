@@ -5,7 +5,7 @@ const Store = {
 		try {
 			localStorage.setItem(key, JSON.stringify(state));
 		} catch (e) {
-			console.error("Failed to save state:", e);
+			console.error(`Failed to save state to ${key}:`, e);
 		}
 	},
 	load: (key) => {
@@ -13,7 +13,7 @@ const Store = {
 			const stateStr = localStorage.getItem(key);
 			return stateStr ? JSON.parse(stateStr) : null;
 		} catch (e) {
-			console.error("Failed to load state:", e);
+			console.error(`Failed to load state at ${key}:`, e);
 			return null;
 		}
 	},
