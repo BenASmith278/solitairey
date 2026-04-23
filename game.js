@@ -616,13 +616,15 @@ function startTimer() {
 }
 
 function onClickNewGame() {
+	const history = Store.load("history") || {};
 	const gameStats = {
 		date: new Date().toISOString(),
 		moves: state.moves,
 		time: state.elapsed,
 		won: state.won,
 	};
-	Store.save("history", gameStats);
+	history[gameStats.date] = gameStats;
+	Store.save("history", history);
 
 	newGame();
 }
