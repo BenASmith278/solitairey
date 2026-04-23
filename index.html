@@ -147,6 +147,17 @@
 		#win-button {
 			font-size: 24px;
 		}
+
+		table,
+		th,
+		td {
+			color: white;
+			border: 1px solid white;
+			text-align: left;
+			border-collapse: collapse;
+			margin: 10;
+			padding: 5;
+		}
 	</style>
 </head>
 <body>
@@ -155,6 +166,7 @@
 		<button id="win-button" onclick="onClickNewGame()" type="button">
 			New Game
 		</button>
+		<table id="history-table"></table>
 	</div>
 	<header id="hud" class="hud">
 		<div id="info">

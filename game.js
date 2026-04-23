@@ -123,6 +123,44 @@ function deal(deck) {
 	state.stock = deck;
 }
 
+function onClickReplay(event) {
+	const key = event.target.dataset.key;
+	const history = Store.load("history") || {};
+	const gameStateStr = history[key]?.history?.[history[key].history.length - 1];
+	if (gameStateStr) {
+		const gameState = JSON.parse(gameStateStr);
+		gameState.history = [];
+		console.log("replaying:", gameState);
+		newGame(gameState);
+	}
+}
+
+function buildHistoryTable() {
+	table = document.getElementById("history-table");
+	table.innerHTML = "";
+	const header = table.createTHead();
+	const headerRow = header.insertRow();
+	headerRow.innerHTML = `
+		<th>Date</th>
+		<th>Moves</th>
+		<th>Time</th>
+		<th>Won</th>
+	`;
+	const history = Store.load("history") || {};
+	for (const [date, stats] of Object.entries(history)) {
+		const row = document.createElement("tr");
+		row.innerHTML = `
+			<td>${date.split("T")[0]}</td>
+			<td>${stats.moves}</td>
+			<td>${stats.time}</td>
+			<td>${stats.won ? "Yes" : "No"}</td>
+			<td><button class='replay' type='button' data-key='${date}'>Replay</button></td>
+		`;
+		table.appendChild(row);
+		row.querySelector(".replay").onclick = onClickReplay;
+	}
+}
+
 function checkWin() {
 	if (
 		state.foundations[0].length === 13 &&
@@ -135,6 +173,7 @@ function checkWin() {
 		winScreen = document.getElementById("win-screen");
 		winScreen.hidden = false;
 		winScreen.style.display = "flex";
+		buildHistoryTable();
 	}
 }
 
@@ -399,6 +438,8 @@ function saveSnapshot() {
 		tableau: state.tableau,
 		moves: state.moves,
 		won: state.won,
+		history: state.history,
+		elapsed: state.elapsed,
 	};
 	state.history.push(JSON.stringify(snapshot));
 }
@@ -618,12 +659,12 @@ function startTimer() {
 function onClickNewGame() {
 	const history = Store.load("history") || {};
 	const gameStats = {
-		date: new Date().toISOString(),
 		moves: state.moves,
 		time: state.elapsed,
 		won: state.won,
+		history: state.history,
 	};
-	history[gameStats.date] = gameStats;
+	history[new Date().toISOString()] = gameStats;
 	Store.save("history", history);
 
 	newGame();
