@@ -144,7 +144,8 @@
 			background: gray;
 		}
 
-		#win-button {
+		#win-button,
+		#replay-recent {
 			font-size: 24px;
 		}
 
@@ -163,9 +164,12 @@
 <body>
 	<div id="win-screen" hidden>
 		You win!
-		<button id="win-button" onclick="onClickNewGame()" type="button">
-			New Game
-		</button>
+		<div>
+			<button id="replay-recent" onclick="" type="button">Replay</button>
+			<button id="win-button" onclick="onClickNewGame()" type="button">
+				New Game
+			</button>
+		</div>
 		<table id="history-table"></table>
 	</div>
 	<header id="hud" class="hud">

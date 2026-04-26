@@ -124,12 +124,14 @@ function deal(deck) {
 }
 
 function onClickReplay(event) {
+	// TODO: most recent game is not in history
 	const key = event.target.dataset.key;
 	const history = Store.load("history") || {};
-	const gameStateStr = history[key]?.history?.[history[key].history.length - 1];
+	const gameStateStr = history[key]?.history?.[0];
 	if (gameStateStr) {
+		saveGameToHistory();
 		const gameState = JSON.parse(gameStateStr);
-		gameState.history = [];
+		gameState.history = gameState.history || [];
 		console.log("replaying:", gameState);
 		newGame(gameState);
 	}
@@ -145,6 +147,7 @@ function buildHistoryTable() {
 		<th>Moves</th>
 		<th>Time</th>
 		<th>Won</th>
+		<th><button style='background: red' type='button' onclick='Store.clear("history"); buildHistoryTable();'>Clear</button></th>
 	`;
 	const history = Store.load("history") || {};
 	for (const [date, stats] of Object.entries(history)) {
@@ -152,7 +155,7 @@ function buildHistoryTable() {
 		row.innerHTML = `
 			<td>${date.split("T")[0]}</td>
 			<td>${stats.moves}</td>
-			<td>${stats.time}</td>
+			<td>${Math.floor(stats.time / 60)}:${String(stats.time % 60).padStart(2, "0")}</td>
 			<td>${stats.won ? "Yes" : "No"}</td>
 			<td><button class='replay' type='button' data-key='${date}'>Replay</button></td>
 		`;
@@ -438,7 +441,6 @@ function saveSnapshot() {
 		tableau: state.tableau,
 		moves: state.moves,
 		won: state.won,
-		history: state.history,
 		elapsed: state.elapsed,
 	};
 	state.history.push(JSON.stringify(snapshot));
@@ -657,6 +659,11 @@ function startTimer() {
 }
 
 function onClickNewGame() {
+	saveGameToHistory();
+	newGame();
+}
+
+function saveGameToHistory() {
 	const history = Store.load("history") || {};
 	const gameStats = {
 		moves: state.moves,
@@ -666,8 +673,6 @@ function onClickNewGame() {
 	};
 	history[new Date().toISOString()] = gameStats;
 	Store.save("history", history);
-
-	newGame();
 }
 
 function newGame(saveState = null) {
