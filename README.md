@@ -12,7 +12,7 @@ Click and drag to move cards around the board. Double-click to send a card to a 
 
 Game state is automatically saved after every move, so you can close the browser and come back to your game later. You can also click the "New Game" button to start a new game, or the "Undo" button to undo your last move.
 
-## Features to add:
+## Roadmap:
 
 - [x] Basic solitaire game
 - [x] Save/load game
@@ -30,3 +30,9 @@ Game state is automatically saved after every move, so you can close the browser
 - [ ] Different solitaire variants (e.g. spider, freecell)
 - [ ] Themes/skins
 - [ ] Multiplayer co-op/ competitive modes
+
+## Issues:
+
+- Win screen not disappears on refresh
+- Winning a game, refreshing, and winning again saves the same game multiple times 
+- Clicking and releasing on a card picks it up and the cards beneath it
