@@ -97,6 +97,8 @@ var timerTimer = null;
 var resizeTimer = null;
 var replayHistory = null;
 var replayIndex = 0;
+var replayRunning = false;
+var replayTimer = null;
 
 function buildDeck() {
 	var deck = [];
@@ -136,6 +138,9 @@ function onClickReplay(event) {
 		newGame(gameState);
 		state.variant = "replay";
 		document.getElementById("controls").hidden = false;
+		document.getElementById("step").disabled = false;
+		document.getElementById("play").disabled = false;
+		document.getElementById("pause").disabled = true;
 		replayHistory = Store.load("gameState").history;
 		replayIndex = 0;
 	}
@@ -723,7 +728,10 @@ function newGame(saveState = null) {
 
 function replayStep() {
 	if (!replayHistory) return;
-	if (replayIndex >= replayHistory.length) return;
+	if (replayIndex >= replayHistory.length) {
+		replayRunning = false;
+		return;
+	}
 
 	const gameState = JSON.parse(replayHistory[replayIndex]);
 	state.stock = gameState.stock;
@@ -734,6 +742,21 @@ function replayStep() {
 	state.won = gameState.won;
 	replayIndex++;
 	layout();
+}
+
+function replayRun() {
+	if (!replayRunning) {
+		if (replayTimer) clearTimeout(replayTimer);
+		document.getElementById("step").disabled = false;
+		document.getElementById("play").disabled = false;
+		document.getElementById("pause").disabled = true;
+		return;
+	}
+	document.getElementById("step").disabled = true;
+	document.getElementById("play").disabled = true;
+	document.getElementById("pause").disabled = false;
+	replayStep();
+	replayTimer = setTimeout(replayRun, 400);
 }
 
 window.addEventListener("load", () => {

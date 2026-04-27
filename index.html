@@ -178,9 +178,20 @@
 			<span id="time">Time: 00:00</span>
 		</div>
 		<div id="controls">
-			<button type="button" id="pause">II</button>
+			<button type="button" id="pause" onclick="replayRunning = false">
+				II
+			</button>
 			<button type="button" id="step" onclick="replayStep()">&gt;</button>
-			<button type="button" id="play">&gt;&gt;</button>
+			<button
+				type="button"
+				id="play"
+				onclick="
+					replayRunning = true;
+					replayRun();
+				"
+			>
+				&gt;&gt;
+			</button>
 		</div>
 		<div>
 			<button
