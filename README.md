@@ -17,8 +17,8 @@ Game state is automatically saved after every move, so you can close the browser
 - [x] Basic solitaire game
 - [x] Save/load game
 - [x] Undo
-- [ ] View stats from past games
-- [ ] Replay past games
+- [x] View stats from past games
+- [x] Replay past games
 - [ ] Polish HUD
 - [ ] Fix favicon on GitHub Pages
 - [ ] Update GitHub deployment to use minified code
