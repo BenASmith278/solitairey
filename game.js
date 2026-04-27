@@ -1,27 +1,27 @@
 const board = document.getElementById("board");
 
 const Store = {
-	save: (state) => {
+	save: (key, state) => {
 		try {
-			localStorage.setItem("solitaireState", JSON.stringify(state));
+			localStorage.setItem(key, JSON.stringify(state));
 		} catch (e) {
-			console.error("Failed to save state:", e);
+			console.error(`Failed to save state to ${key}:`, e);
 		}
 	},
-	load: () => {
+	load: (key) => {
 		try {
-			const stateStr = localStorage.getItem("solitaireState");
+			const stateStr = localStorage.getItem(key);
 			return stateStr ? JSON.parse(stateStr) : null;
 		} catch (e) {
-			console.error("Failed to load state:", e);
+			console.error(`Failed to load state at ${key}:`, e);
 			return null;
 		}
 	},
-	clear: () => {
+	clear: (key) => {
 		try {
-			localStorage.removeItem("solitaireState");
+			localStorage.removeItem(key);
 		} catch (e) {
-			console.error("Failed to clear state:", e);
+			console.error(`Failed to clear state at ${key}:`, e);
 		}
 	},
 };
@@ -73,7 +73,7 @@ function getRankLabel(rank) {
 
 var state = {
 	version: 1,
-	variant: "draw1",
+	variant: "playthrough",
 	stock: [],
 	waste: [],
 	foundations: [[], [], [], []],
@@ -95,6 +95,10 @@ var dragPendingEvent = null;
 var isAutoCompleting = false;
 var timerTimer = null;
 var resizeTimer = null;
+var replayHistory = null;
+var replayIndex = 0;
+var replayRunning = false;
+var replayTimer = null;
 
 function buildDeck() {
 	var deck = [];
@@ -123,6 +127,52 @@ function deal(deck) {
 	state.stock = deck;
 }
 
+function onClickReplay(event) {
+	const key = event.target.dataset.key;
+	const history = Store.load("history") || {};
+	const gameStateStr = history[key]?.history?.[0];
+	if (gameStateStr) {
+		const gameState = JSON.parse(gameStateStr);
+		gameState.history = gameState.history || [];
+		console.log("replaying:", gameState);
+		newGame(gameState);
+		state.variant = "replay";
+		document.getElementById("controls").hidden = false;
+		document.getElementById("step").disabled = false;
+		document.getElementById("play").disabled = false;
+		document.getElementById("pause").disabled = true;
+		replayHistory = Store.load("gameState").history;
+		replayIndex = 0;
+	}
+}
+
+function buildHistoryTable() {
+	table = document.getElementById("history-table");
+	table.innerHTML = "";
+	const header = table.createTHead();
+	const headerRow = header.insertRow();
+	headerRow.innerHTML = `
+		<th>Date</th>
+		<th>Moves</th>
+		<th>Time</th>
+		<th>Won</th>
+		<th><button style='background: red' type='button' onclick='Store.clear("history"); buildHistoryTable();'>Clear</button></th>
+	`;
+	const history = Store.load("history") || {};
+	for (const [date, stats] of Object.entries(history)) {
+		const row = document.createElement("tr");
+		row.innerHTML = `
+			<td>${date.split("T")[0]}</td>
+			<td>${stats.moves}</td>
+			<td>${Math.floor(stats.time / 60)}:${String(stats.time % 60).padStart(2, "0")}</td>
+			<td>${stats.won ? "Yes" : "No"}</td>
+			<td><button class='replay' type='button' data-key='${date}'>Replay</button></td>
+		`;
+		table.appendChild(row);
+		row.querySelector(".replay").onclick = onClickReplay;
+	}
+}
+
 function checkWin() {
 	if (
 		state.foundations[0].length === 13 &&
@@ -131,11 +181,19 @@ function checkWin() {
 		state.foundations[2].length === state.foundations[3].length
 	) {
 		state.won = true;
-		Store.save(state);
-		winScreen = document.getElementById("win-screen");
-		winScreen.hidden = false;
-		winScreen.style.display = "flex";
+		Store.save("gameState", state);
+		saveGameToHistory();
+		showNewGameScreen();
 	}
+}
+
+function showNewGameScreen() {
+	winScreen = document.getElementById("win-screen");
+	text = document.getElementById("win-text");
+	text.textContent = state.won ? "You won!" : "Game over!";
+	winScreen.hidden = false;
+	winScreen.style.display = "flex";
+	buildHistoryTable();
 }
 
 function checkAutoComplete() {
@@ -375,6 +433,7 @@ function findDropTarget(x, y) {
 
 function undo() {
 	if (state.history.length === 0) return;
+	if (isAutoCompleting) return;
 	const lastState = JSON.parse(state.history.pop());
 
 	state.stock = lastState.stock;
@@ -388,7 +447,7 @@ function undo() {
 	reverseCardMap = {};
 	initCardElements();
 	layout();
-	Store.save(state);
+	Store.save("gameState", state);
 }
 
 function saveSnapshot() {
@@ -399,9 +458,9 @@ function saveSnapshot() {
 		tableau: state.tableau,
 		moves: state.moves,
 		won: state.won,
+		elapsed: state.elapsed,
 	};
 	state.history.push(JSON.stringify(snapshot));
-	if (state.history.length > 20) state.history.shift();
 }
 
 function applyMove(fromPile, toPile, cards) {
@@ -430,12 +489,16 @@ function applyMove(fromPile, toPile, cards) {
 
 function onClickAutoComplete() {
 	if (isAutoCompleting) return;
-	Store.save(state);
+	Store.save("gameState", state);
 	saveSnapshot();
 	autoComplete();
 }
 
 function autoComplete() {
+	const autoCompleteButton = document.getElementById("autocomplete");
+	const undoButton = document.getElementById("undo");
+	autoCompleteButton.disabled = true;
+	undoButton.disabled = true;
 	isAutoCompleting = true;
 
 	for (const pile of state.tableau) {
@@ -451,6 +514,8 @@ function autoComplete() {
 		}
 	}
 	isAutoCompleting = false;
+	autoCompleteButton.disabled = false;
+	undoButton.disabled = state.history.length === 0;
 }
 
 function startDrag() {
@@ -505,7 +570,7 @@ function onStockClick(event) {
 
 	state.moves++;
 	layout();
-	Store.save(state);
+	Store.save("gameState", state);
 }
 
 function onPointerDown(event) {
@@ -562,7 +627,7 @@ function onPointerUp(e) {
 			dropTarget.pile,
 			draggingArray,
 		);
-		Store.save(state);
+		Store.save("gameState", state);
 	} else {
 		layout();
 	}
@@ -596,7 +661,7 @@ function onDoubleClick(event) {
 	if (foundationIndex > -1 && fromPile.indexOf(card) === fromPile.length - 1) {
 		saveSnapshot();
 		applyMove(fromPile, state.foundations[foundationIndex], [cardEl]);
-		Store.save(state);
+		Store.save("gameState", state);
 	}
 }
 
@@ -616,11 +681,23 @@ function startTimer() {
 	}, 1000);
 }
 
+function saveGameToHistory() {
+	const history = Store.load("history") || {};
+	const gameStats = {
+		moves: state.moves,
+		time: state.elapsed,
+		won: state.won,
+		history: state.history,
+	};
+	history[new Date().toISOString()] = gameStats;
+	Store.save("history", history);
+}
+
 function newGame(saveState = null) {
 	if (saveState) {
 		state = saveState;
 	} else {
-		Store.clear();
+		Store.clear("gameState");
 		if (timerTimer) clearInterval(timerTimer);
 		state.elapsed = 0;
 		state.moves = 0;
@@ -632,11 +709,14 @@ function newGame(saveState = null) {
 		state.won = false;
 
 		deal(shuffle(buildDeck()));
-		Store.save(state);
+		Store.save("gameState", state);
 	}
+	state.variant = "playthrough";
 	const winScreen = document.getElementById("win-screen");
 	winScreen.hidden = true;
 	winScreen.style.display = "none";
+
+	document.getElementById("controls").hidden = true;
 
 	console.log(state);
 	initCardElements();
@@ -646,8 +726,41 @@ function newGame(saveState = null) {
 	startTimer();
 }
 
+function replayStep() {
+	if (!replayHistory) return;
+	if (replayIndex >= replayHistory.length) {
+		replayRunning = false;
+		return;
+	}
+
+	const gameState = JSON.parse(replayHistory[replayIndex]);
+	state.stock = gameState.stock;
+	state.waste = gameState.waste;
+	state.foundations = gameState.foundations;
+	state.tableau = gameState.tableau;
+	state.moves = gameState.moves;
+	state.won = gameState.won;
+	replayIndex++;
+	layout();
+}
+
+function replayRun() {
+	if (!replayRunning) {
+		if (replayTimer) clearTimeout(replayTimer);
+		document.getElementById("step").disabled = false;
+		document.getElementById("play").disabled = false;
+		document.getElementById("pause").disabled = true;
+		return;
+	}
+	document.getElementById("step").disabled = true;
+	document.getElementById("play").disabled = true;
+	document.getElementById("pause").disabled = false;
+	replayStep();
+	replayTimer = setTimeout(replayRun, 400);
+}
+
 window.addEventListener("load", () => {
-	const savedState = Store.load();
+	const savedState = Store.load("gameState");
 	newGame(savedState);
 });
 
