@@ -164,10 +164,9 @@
 </head>
 <body>
 	<div id="win-screen" hidden>
-		You win!
+		<div id="win-text">You win!</div>
 		<div>
-			<button id="replay-recent" onclick="" type="button">Replay</button>
-			<button id="win-button" onclick="onClickNewGame()" type="button">
+			<button id="win-button" onclick="newGame()" type="button">
 				New Game
 			</button>
 		</div>
@@ -179,7 +178,15 @@
 			<span id="time">Time: 00:00</span>
 		</div>
 		<div>
-			<button id="new-game" onclick="onClickNewGame()" type="button">
+			<button
+				id="new-game"
+				onclick="
+					Store.save('gameState', state);
+					saveGameToHistory();
+					showNewGameScreen();
+				"
+				type="button"
+			>
 				New Game
 			</button>
 			<button id="undo" onclick="undo()" type="button">Undo</button>

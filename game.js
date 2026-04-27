@@ -173,11 +173,18 @@ function checkWin() {
 	) {
 		state.won = true;
 		Store.save("gameState", state);
-		winScreen = document.getElementById("win-screen");
-		winScreen.hidden = false;
-		winScreen.style.display = "flex";
-		buildHistoryTable();
+		saveGameToHistory();
+		showNewGameScreen();
 	}
+}
+
+function showNewGameScreen() {
+	winScreen = document.getElementById("win-screen");
+	text = document.getElementById("win-text");
+	text.textContent = state.won ? "You won!" : "Game over!";
+	winScreen.hidden = false;
+	winScreen.style.display = "flex";
+	buildHistoryTable();
 }
 
 function checkAutoComplete() {
@@ -663,11 +670,6 @@ function startTimer() {
 		const seconds = (state.elapsed % 60).toString().padStart(2, "0");
 		timerEl.textContent = `Time: ${minutes}:${seconds}`;
 	}, 1000);
-}
-
-function onClickNewGame() {
-	saveGameToHistory();
-	newGame();
 }
 
 function saveGameToHistory() {
