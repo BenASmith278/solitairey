@@ -417,6 +417,7 @@ function findDropTarget(x, y) {
 
 function undo() {
 	if (state.history.length === 0) return;
+	if (isAutoCompleting) return;
 	const lastState = JSON.parse(state.history.pop());
 
 	state.stock = lastState.stock;
@@ -478,6 +479,10 @@ function onClickAutoComplete() {
 }
 
 function autoComplete() {
+	const autoCompleteButton = document.getElementById("autocomplete");
+	const undoButton = document.getElementById("undo");
+	autoCompleteButton.disabled = true;
+	undoButton.disabled = true;
 	isAutoCompleting = true;
 
 	for (const pile of state.tableau) {
@@ -493,6 +498,8 @@ function autoComplete() {
 		}
 	}
 	isAutoCompleting = false;
+	autoCompleteButton.disabled = false;
+	undoButton.disabled = state.history.length === 0;
 }
 
 function startDrag() {
