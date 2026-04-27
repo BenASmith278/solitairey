@@ -73,7 +73,7 @@ function getRankLabel(rank) {
 
 var state = {
 	version: 1,
-	variant: "draw1",
+	variant: "playthrough",
 	stock: [],
 	waste: [],
 	foundations: [[], [], [], []],
@@ -95,6 +95,8 @@ var dragPendingEvent = null;
 var isAutoCompleting = false;
 var timerTimer = null;
 var resizeTimer = null;
+var replayHistory = null;
+var replayIndex = 0;
 
 function buildDeck() {
 	var deck = [];
@@ -124,16 +126,18 @@ function deal(deck) {
 }
 
 function onClickReplay(event) {
-	// TODO: most recent game is not in history
 	const key = event.target.dataset.key;
 	const history = Store.load("history") || {};
 	const gameStateStr = history[key]?.history?.[0];
 	if (gameStateStr) {
-		saveGameToHistory();
 		const gameState = JSON.parse(gameStateStr);
 		gameState.history = gameState.history || [];
 		console.log("replaying:", gameState);
 		newGame(gameState);
+		state.variant = "replay";
+		document.getElementById("controls").hidden = false;
+		replayHistory = Store.load("gameState").history;
+		replayIndex = 0;
 	}
 }
 
@@ -702,9 +706,12 @@ function newGame(saveState = null) {
 		deal(shuffle(buildDeck()));
 		Store.save("gameState", state);
 	}
+	state.variant = "playthrough";
 	const winScreen = document.getElementById("win-screen");
 	winScreen.hidden = true;
 	winScreen.style.display = "none";
+
+	document.getElementById("controls").hidden = true;
 
 	console.log(state);
 	initCardElements();
@@ -712,6 +719,21 @@ function newGame(saveState = null) {
 	if (!checkAutoComplete())
 		document.getElementById("autocomplete").disabled = true;
 	startTimer();
+}
+
+function replayStep() {
+	if (!replayHistory) return;
+	if (replayIndex >= replayHistory.length) return;
+
+	const gameState = JSON.parse(replayHistory[replayIndex]);
+	state.stock = gameState.stock;
+	state.waste = gameState.waste;
+	state.foundations = gameState.foundations;
+	state.tableau = gameState.tableau;
+	state.moves = gameState.moves;
+	state.won = gameState.won;
+	replayIndex++;
+	layout();
 }
 
 window.addEventListener("load", () => {
