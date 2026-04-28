@@ -130,18 +130,21 @@ function deal(deck) {
 function onClickReplay(event) {
 	const key = event.target.dataset.key;
 	const history = Store.load("history") || {};
-	const gameStateStr = history[key]?.history?.[0];
-	if (gameStateStr) {
-		const gameState = JSON.parse(gameStateStr);
-		gameState.history = gameState.history || [];
+	replayHistory = history[key]?.history;
+	if (replayHistory) {
+		const gameState = JSON.parse(replayHistory[0]);
 		console.log("replaying:", gameState);
+
+		gameState.history = gameState.history || [];
+
 		newGame(gameState);
-		state.variant = "replay";
+
 		document.getElementById("controls").hidden = false;
 		document.getElementById("step").disabled = false;
 		document.getElementById("play").disabled = false;
 		document.getElementById("pause").disabled = true;
-		replayHistory = Store.load("gameState").history;
+
+		state.variant = "replay";
 		replayIndex = 0;
 	}
 }
