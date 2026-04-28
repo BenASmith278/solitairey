@@ -748,6 +748,10 @@ function replayStep() {
 	state.moves = gameState.moves;
 	state.won = gameState.won;
 	replayIndex++;
+
+	cardMap = {};
+	reverseCardMap = {};
+	initCardElements();
 	layout();
 }
 
