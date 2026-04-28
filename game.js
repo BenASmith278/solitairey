@@ -206,7 +206,7 @@ function checkAutoComplete() {
 	if (state.stock.length > 0 || state.waste.length > 0) return false;
 
 	const autoCompleteButton = document.getElementById("autocomplete");
-	autoCompleteButton.disabled = false;
+	if (!isAutoCompleting) autoCompleteButton.disabled = false;
 	return true;
 }
 
@@ -324,7 +324,7 @@ function layout() {
 	board.innerHTML = "";
 	const movesCounter = document.getElementById("moves");
 	movesCounter.textContent = `Moves: ${state.moves}`;
-	if (state.history.length === 0)
+	if (state.history.length === 0 || isAutoCompleting)
 		document.getElementById("undo").disabled = true;
 	else document.getElementById("undo").disabled = false;
 
@@ -497,22 +497,26 @@ function onClickAutoComplete() {
 function autoComplete() {
 	const autoCompleteButton = document.getElementById("autocomplete");
 	const undoButton = document.getElementById("undo");
+	const topCards = [];
 	autoCompleteButton.disabled = true;
 	undoButton.disabled = true;
 	isAutoCompleting = true;
 
 	for (const pile of state.tableau) {
-		for (const card of pile) {
-			const foundationIndex = canMoveToFoundation(card);
-			if (foundationIndex > -1) {
-				applyMove(pile, state.foundations[foundationIndex], [
-					cardMap[cardKey(card)],
-				]);
-				setTimeout(autoComplete, 120);
-				return;
-			}
+		topCards.push({ card: pile[pile.length - 1], pile: pile });
+	}
+
+	for (const key of topCards) {
+		const foundationIndex = canMoveToFoundation(key.card);
+		if (foundationIndex > -1) {
+			applyMove(key.pile, state.foundations[foundationIndex], [
+				cardMap[cardKey(key.card)],
+			]);
+			setTimeout(autoComplete, 120);
+			return;
 		}
 	}
+
 	isAutoCompleting = false;
 	autoCompleteButton.disabled = false;
 	undoButton.disabled = state.history.length === 0;
