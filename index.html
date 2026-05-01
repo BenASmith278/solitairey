@@ -197,6 +197,7 @@
 			<button
 				id="new-game"
 				onclick="
+					saveToStateHistory();
 					Store.save('gameState', state);
 					saveGameToHistory();
 					showNewGameScreen();
