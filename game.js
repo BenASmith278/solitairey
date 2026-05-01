@@ -503,6 +503,7 @@ function onClickAutoComplete() {
 }
 
 function autoComplete() {
+	saveToStateHistory();
 	const autoCompleteButton = document.getElementById("autocomplete");
 	const undoButton = document.getElementById("undo");
 	const topCards = [];
