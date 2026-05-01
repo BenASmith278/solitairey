@@ -185,6 +185,7 @@ function checkWin() {
 	) {
 		state.won = true;
 		Store.save("gameState", state);
+		saveToStateHistory();
 		saveGameToHistory();
 		showNewGameScreen();
 	}
