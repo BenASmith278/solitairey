@@ -194,7 +194,7 @@ function checkWin() {
 function showNewGameScreen() {
 	winScreen = document.getElementById("win-screen");
 	text = document.getElementById("win-text");
-	text.textContent = state.won ? "You won!" : "Game over!";
+	text.textContent = state.won ? "You win!" : "Game over!";
 	winScreen.hidden = false;
 	winScreen.style.display = "flex";
 	buildHistoryTable();
@@ -730,8 +730,14 @@ function newGame(saveState = null) {
 		Store.save("gameState", state);
 	}
 	const winScreen = document.getElementById("win-screen");
-	winScreen.hidden = true;
-	winScreen.style.display = "none";
+	if (state.won) {
+		winScreen.style.display = "flex";
+		winScreen.hidden = false;
+		buildHistoryTable();
+	} else {
+		winScreen.hidden = true;
+		winScreen.style.display = "none";
+	}
 
 	document.getElementById("controls").hidden = state.variant === "playthrough";
 
