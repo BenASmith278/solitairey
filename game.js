@@ -454,7 +454,7 @@ function undo() {
 	if (state.variant === "replay") replayIndex--;
 }
 
-function saveSnapshot() {
+function saveToStateHistory() {
 	const snapshot = {
 		stock: state.stock,
 		waste: state.waste,
@@ -496,8 +496,8 @@ function applyMove(fromPile, toPile, cards) {
 
 function onClickAutoComplete() {
 	if (isAutoCompleting) return;
+	saveToStateHistory();
 	Store.save("gameState", state);
-	saveSnapshot();
 	autoComplete();
 }
 
@@ -636,7 +636,7 @@ function onPointerUp(e) {
 
 	if (dropTarget && isValidMove(dropTarget, rootCard)) {
 		console.log(state.tableau);
-		saveSnapshot();
+		saveToStateHistory();
 		applyMove(
 			resolvePileFromElement(draggingArray[0]).pile,
 			dropTarget.pile,
@@ -674,7 +674,7 @@ function onDoubleClick(event) {
 	const foundationIndex = canMoveToFoundation(card);
 	const fromPile = resolvePileFromElement(cardEl).pile;
 	if (foundationIndex > -1 && fromPile.indexOf(card) === fromPile.length - 1) {
-		saveSnapshot();
+		saveToStateHistory();
 		applyMove(fromPile, state.foundations[foundationIndex], [cardEl]);
 		Store.save("gameState", state);
 	}
