@@ -387,7 +387,9 @@ function isValidMove(destination, card) {
 			);
 		}
 	} else if (destination.type === "foundations") {
-		return canMoveToFoundation(card) === destination.index;
+		if (destination.pile.length === 0) return card.rank === 1;
+		const topCard = destination.pile[destination.pile.length - 1];
+		return topCard.suit === card.suit && card.rank === topCard.rank + 1;
 	}
 
 	return false;
@@ -397,9 +399,10 @@ function canMoveToFoundation(card) {
 	if (card === undefined) return -1;
 
 	for (const foundation of state.foundations) {
-		if (foundation.length === 0) {
-			return card.rank === 1 ? state.foundations.indexOf(foundation) : -1;
-		} else {
+		if (foundation.length === 0 && card.rank === 1) {
+			return state.foundations.indexOf(foundation);
+		}
+		if (foundation.length > 0) {
 			const topCard = foundation[foundation.length - 1];
 			if (topCard.suit === card.suit && card.rank === topCard.rank + 1) {
 				return state.foundations.indexOf(foundation);
