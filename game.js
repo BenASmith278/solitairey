@@ -451,6 +451,7 @@ function undo() {
 	initCardElements();
 	layout();
 	Store.save("gameState", state);
+	if (state.variant === "replay") replayIndex--;
 }
 
 function saveSnapshot() {
