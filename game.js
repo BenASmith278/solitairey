@@ -130,19 +130,22 @@ function deal(deck) {
 function onClickReplay(event) {
 	const key = event.target.dataset.key;
 	const history = Store.load("history") || {};
-	const gameStateStr = history[key]?.history?.[0];
-	if (gameStateStr) {
-		const gameState = JSON.parse(gameStateStr);
-		gameState.history = gameState.history || [];
+	replayHistory = history[key]?.history;
+	if (replayHistory) {
+		const gameState = JSON.parse(replayHistory[0]);
 		console.log("replaying:", gameState);
+
+		gameState.history = gameState.history || [];
+
 		newGame(gameState);
-		state.variant = "replay";
+
 		document.getElementById("controls").hidden = false;
 		document.getElementById("step").disabled = false;
 		document.getElementById("play").disabled = false;
 		document.getElementById("pause").disabled = true;
-		replayHistory = Store.load("gameState").history;
-		replayIndex = 0;
+
+		state.variant = "replay";
+		replayIndex = 1;
 	}
 }
 
@@ -182,6 +185,7 @@ function checkWin() {
 	) {
 		state.won = true;
 		Store.save("gameState", state);
+		saveToStateHistory();
 		saveGameToHistory();
 		showNewGameScreen();
 	}
@@ -190,7 +194,7 @@ function checkWin() {
 function showNewGameScreen() {
 	winScreen = document.getElementById("win-screen");
 	text = document.getElementById("win-text");
-	text.textContent = state.won ? "You won!" : "Game over!";
+	text.textContent = state.won ? "You win!" : "Game over!";
 	winScreen.hidden = false;
 	winScreen.style.display = "flex";
 	buildHistoryTable();
@@ -206,7 +210,7 @@ function checkAutoComplete() {
 	if (state.stock.length > 0 || state.waste.length > 0) return false;
 
 	const autoCompleteButton = document.getElementById("autocomplete");
-	autoCompleteButton.disabled = false;
+	if (!isAutoCompleting) autoCompleteButton.disabled = false;
 	return true;
 }
 
@@ -324,7 +328,7 @@ function layout() {
 	board.innerHTML = "";
 	const movesCounter = document.getElementById("moves");
 	movesCounter.textContent = `Moves: ${state.moves}`;
-	if (state.history.length === 0)
+	if (state.history.length === 0 || isAutoCompleting)
 		document.getElementById("undo").disabled = true;
 	else document.getElementById("undo").disabled = false;
 
@@ -383,7 +387,9 @@ function isValidMove(destination, card) {
 			);
 		}
 	} else if (destination.type === "foundations") {
-		return canMoveToFoundation(card) === destination.index;
+		if (destination.pile.length === 0) return card.rank === 1;
+		const topCard = destination.pile[destination.pile.length - 1];
+		return topCard.suit === card.suit && card.rank === topCard.rank + 1;
 	}
 
 	return false;
@@ -393,9 +399,10 @@ function canMoveToFoundation(card) {
 	if (card === undefined) return -1;
 
 	for (const foundation of state.foundations) {
-		if (foundation.length === 0) {
-			return card.rank === 1 ? state.foundations.indexOf(foundation) : -1;
-		} else {
+		if (foundation.length === 0 && card.rank === 1) {
+			return state.foundations.indexOf(foundation);
+		}
+		if (foundation.length > 0) {
 			const topCard = foundation[foundation.length - 1];
 			if (topCard.suit === card.suit && card.rank === topCard.rank + 1) {
 				return state.foundations.indexOf(foundation);
@@ -448,9 +455,10 @@ function undo() {
 	initCardElements();
 	layout();
 	Store.save("gameState", state);
+	if (state.variant === "replay") replayIndex--;
 }
 
-function saveSnapshot() {
+function saveToStateHistory() {
 	const snapshot = {
 		stock: state.stock,
 		waste: state.waste,
@@ -465,6 +473,9 @@ function saveSnapshot() {
 
 function applyMove(fromPile, toPile, cards) {
 	console.log("Applying move from", fromPile, "to", toPile, "cards:", cards);
+	document.getElementById("play").disabled = true;
+	document.getElementById("step").disabled = true;
+	document.getElementById("pause").disabled = true;
 
 	if (fromPile === toPile) return;
 
@@ -489,30 +500,35 @@ function applyMove(fromPile, toPile, cards) {
 
 function onClickAutoComplete() {
 	if (isAutoCompleting) return;
+	saveToStateHistory();
 	Store.save("gameState", state);
-	saveSnapshot();
 	autoComplete();
 }
 
 function autoComplete() {
+	saveToStateHistory();
 	const autoCompleteButton = document.getElementById("autocomplete");
 	const undoButton = document.getElementById("undo");
+	const topCards = [];
 	autoCompleteButton.disabled = true;
 	undoButton.disabled = true;
 	isAutoCompleting = true;
 
 	for (const pile of state.tableau) {
-		for (const card of pile) {
-			const foundationIndex = canMoveToFoundation(card);
-			if (foundationIndex > -1) {
-				applyMove(pile, state.foundations[foundationIndex], [
-					cardMap[cardKey(card)],
-				]);
-				setTimeout(autoComplete, 120);
-				return;
-			}
+		topCards.push({ card: pile[pile.length - 1], pile: pile });
+	}
+
+	for (const key of topCards) {
+		const foundationIndex = canMoveToFoundation(key.card);
+		if (foundationIndex > -1) {
+			applyMove(key.pile, state.foundations[foundationIndex], [
+				cardMap[cardKey(key.card)],
+			]);
+			setTimeout(autoComplete, 120);
+			return;
 		}
 	}
+
 	isAutoCompleting = false;
 	autoCompleteButton.disabled = false;
 	undoButton.disabled = state.history.length === 0;
@@ -555,7 +571,11 @@ function onStockClick(event) {
 	if (!resolved || resolved.pile !== state.stock) return;
 	if (state.stock.length + state.waste.length === 0) return;
 
-	saveSnapshot();
+	document.getElementById("play").disabled = true;
+	document.getElementById("step").disabled = true;
+	document.getElementById("pause").disabled = true;
+
+	saveToStateHistory();
 	if (state.stock.length > 0) {
 		const card = state.stock.pop();
 		card.faceUp = true;
@@ -621,7 +641,7 @@ function onPointerUp(e) {
 
 	if (dropTarget && isValidMove(dropTarget, rootCard)) {
 		console.log(state.tableau);
-		saveSnapshot();
+		saveToStateHistory();
 		applyMove(
 			resolvePileFromElement(draggingArray[0]).pile,
 			dropTarget.pile,
@@ -659,7 +679,7 @@ function onDoubleClick(event) {
 	const foundationIndex = canMoveToFoundation(card);
 	const fromPile = resolvePileFromElement(cardEl).pile;
 	if (foundationIndex > -1 && fromPile.indexOf(card) === fromPile.length - 1) {
-		saveSnapshot();
+		saveToStateHistory();
 		applyMove(fromPile, state.foundations[foundationIndex], [cardEl]);
 		Store.save("gameState", state);
 	}
@@ -707,16 +727,22 @@ function newGame(saveState = null) {
 		state.tableau = [[], [], [], [], [], [], []];
 		state.history = [];
 		state.won = false;
+		state.variant = "playthrough";
 
 		deal(shuffle(buildDeck()));
 		Store.save("gameState", state);
 	}
-	state.variant = "playthrough";
 	const winScreen = document.getElementById("win-screen");
-	winScreen.hidden = true;
-	winScreen.style.display = "none";
+	if (state.won) {
+		winScreen.style.display = "flex";
+		winScreen.hidden = false;
+		buildHistoryTable();
+	} else {
+		winScreen.hidden = true;
+		winScreen.style.display = "none";
+	}
 
-	document.getElementById("controls").hidden = true;
+	document.getElementById("controls").hidden = state.variant === "playthrough";
 
 	console.log(state);
 	initCardElements();
@@ -741,7 +767,13 @@ function replayStep() {
 	state.moves = gameState.moves;
 	state.won = gameState.won;
 	replayIndex++;
+
+	cardMap = {};
+	reverseCardMap = {};
+	initCardElements();
 	layout();
+	saveToStateHistory();
+	checkWin();
 }
 
 function replayRun() {
