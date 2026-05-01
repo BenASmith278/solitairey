@@ -764,6 +764,7 @@ function replayStep() {
 	initCardElements();
 	layout();
 	saveToStateHistory();
+	checkWin();
 }
 
 function replayRun() {
