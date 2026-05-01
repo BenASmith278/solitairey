@@ -753,6 +753,7 @@ function replayStep() {
 	reverseCardMap = {};
 	initCardElements();
 	layout();
+	saveToStateHistory();
 }
 
 function replayRun() {
