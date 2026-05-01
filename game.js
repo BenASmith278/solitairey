@@ -724,16 +724,16 @@ function newGame(saveState = null) {
 		state.tableau = [[], [], [], [], [], [], []];
 		state.history = [];
 		state.won = false;
+		state.variant = "playthrough";
 
 		deal(shuffle(buildDeck()));
 		Store.save("gameState", state);
 	}
-	state.variant = "playthrough";
 	const winScreen = document.getElementById("win-screen");
 	winScreen.hidden = true;
 	winScreen.style.display = "none";
 
-	document.getElementById("controls").hidden = true;
+	document.getElementById("controls").hidden = state.variant === "playthrough";
 
 	console.log(state);
 	initCardElements();
