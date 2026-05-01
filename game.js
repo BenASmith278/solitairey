@@ -145,7 +145,7 @@ function onClickReplay(event) {
 		document.getElementById("pause").disabled = true;
 
 		state.variant = "replay";
-		replayIndex = 0;
+		replayIndex = 1;
 	}
 }
 
