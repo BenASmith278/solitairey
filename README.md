@@ -36,7 +36,4 @@ Game state is automatically saved after every move, so you can close the browser
 - Win screen disappears on refresh
 - Winning a game, refreshing, and winning again saves the same game multiple times 
 - Clicking and releasing on a card picks it up and the cards beneath it
-- History is incorrect after autocomplete
 - Pointer cursor on stock pile when waste and stock empty
-- Replay doesn't work if you refresh the page during replay
-- Replay doesn't include autocomplete steps
