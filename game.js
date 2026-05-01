@@ -468,6 +468,9 @@ function saveSnapshot() {
 
 function applyMove(fromPile, toPile, cards) {
 	console.log("Applying move from", fromPile, "to", toPile, "cards:", cards);
+	document.getElementById("play").disabled = true;
+	document.getElementById("step").disabled = true;
+	document.getElementById("pause").disabled = true;
 
 	if (fromPile === toPile) return;
 
@@ -562,7 +565,11 @@ function onStockClick(event) {
 	if (!resolved || resolved.pile !== state.stock) return;
 	if (state.stock.length + state.waste.length === 0) return;
 
-	saveSnapshot();
+	document.getElementById("play").disabled = true;
+	document.getElementById("step").disabled = true;
+	document.getElementById("pause").disabled = true;
+
+	saveToStateHistory();
 	if (state.stock.length > 0) {
 		const card = state.stock.pop();
 		card.faceUp = true;
